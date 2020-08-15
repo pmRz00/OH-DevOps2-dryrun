@@ -1,0 +1,44 @@
+name: user-java
+
+on:
+  push:
+    branches: [ master ]
+    paths:
+      - 'apis/user-java/**'
+      - '.github/workflows/user-java.yml'
+  pull_request:
+    branches: [ master]
+    paths:
+      - 'apis/user-java/**'
+      - '.github/workflows/user-java.yml'
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apis/user-java/
+    
+    steps:
+    - name: checkout code
+      uses: actions/checkout@v2
+    - name: login to Azure CLI
+      if: github.ref == 'refs/heads/master'
+      uses: azure/login@v1.1
+      with:
+        creds: ${{ secrets.AZURE_CREDENTIALS }}
+    - name: build and publish container
+      if: github.ref == 'refs/heads/master'
+      run: |
+        az acr build --image "devopsoh/api-user-java:$GITHUB_RUN_ID" --registry openhackaya6gdn9acr --file Dockerfile .
+    - name: deploy new image to Azure Web App
+      if: github.ref == 'refs/heads/master'
+      uses: azure/webapps-deploy@v2
+      with:
+        app-name: 'openhackaya6gdn9userjava'
+        images: 'openhackaya6gdn9acr.azurecr.io/devopsoh/api-user-java:${{ github.run_id }}'        
+        
+        
+        
+        
